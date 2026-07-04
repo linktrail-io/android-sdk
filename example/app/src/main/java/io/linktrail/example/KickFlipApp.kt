@@ -2,6 +2,7 @@ package io.linktrail.example
 
 import android.app.Application
 import io.linktrail.LinkTrail
+import io.linktrail.LinkTrailLogLevel
 import io.linktrail.LinkTrailOptions
 
 /**
@@ -17,7 +18,7 @@ class KickFlipApp : Application() {
         val apiKey = BuildConfig.LINKTRAIL_API_KEY
         if (apiKey.isNotBlank()) {
             runCatching {
-                LinkTrail.configure(this, apiKey, LinkTrailOptions(logEnabled = true))
+                LinkTrail.configure(this, apiKey, LinkTrailOptions(logEnabled = true, logLevel = LinkTrailLogLevel.DEBUG))
             }
         }
     }

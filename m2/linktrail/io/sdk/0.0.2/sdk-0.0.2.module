@@ -3,7 +3,7 @@
   "component": {
     "group": "linktrail.io",
     "module": "sdk",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "attributes": {
       "org.gradle.status": "release"
     }
@@ -33,13 +33,13 @@
       ],
       "files": [
         {
-          "name": "sdk-0.0.1.aar",
-          "url": "sdk-0.0.1.aar",
-          "size": 141573,
-          "sha512": "87e93ff54849fd648c12ebc365a46c7077117683a90c2e922747e0c07743fb43fe627498220ee24536e9cc640372d2f09eb3a5903a0dead53c04afded05905f4",
-          "sha256": "672b4b8986b15c5f1afc04f593b19fd0710a565641abbea292d694732d2b5a77",
-          "sha1": "15dd170164f0093546334b57579dc31515a1ebc7",
-          "md5": "d6c2fe4eaf3aa6b852e9255b7a8687d0"
+          "name": "sdk-0.0.2.aar",
+          "url": "sdk-0.0.2.aar",
+          "size": 142721,
+          "sha512": "c1478739f18e7c13c10deb3d64cd7067e2e1721ba533e9612ba430dfeedb26fcf05ddfe4c20c5f9df78cfd7db012782de9083acb5d0ea43d916b4ca354954ab8",
+          "sha256": "7276d01d8a5500759512de78ff355c362e863d18041c55a6373eafc16cb492fa",
+          "sha1": "21c6a355f83cf2c50366a86b9c3f24c983e259f2",
+          "md5": "28e09d3bb07ce75ab59482f6889e98d5"
         }
       ]
     },
@@ -90,13 +90,13 @@
       ],
       "files": [
         {
-          "name": "sdk-0.0.1.aar",
-          "url": "sdk-0.0.1.aar",
-          "size": 141573,
-          "sha512": "87e93ff54849fd648c12ebc365a46c7077117683a90c2e922747e0c07743fb43fe627498220ee24536e9cc640372d2f09eb3a5903a0dead53c04afded05905f4",
-          "sha256": "672b4b8986b15c5f1afc04f593b19fd0710a565641abbea292d694732d2b5a77",
-          "sha1": "15dd170164f0093546334b57579dc31515a1ebc7",
-          "md5": "d6c2fe4eaf3aa6b852e9255b7a8687d0"
+          "name": "sdk-0.0.2.aar",
+          "url": "sdk-0.0.2.aar",
+          "size": 142721,
+          "sha512": "c1478739f18e7c13c10deb3d64cd7067e2e1721ba533e9612ba430dfeedb26fcf05ddfe4c20c5f9df78cfd7db012782de9083acb5d0ea43d916b4ca354954ab8",
+          "sha256": "7276d01d8a5500759512de78ff355c362e863d18041c55a6373eafc16cb492fa",
+          "sha1": "21c6a355f83cf2c50366a86b9c3f24c983e259f2",
+          "md5": "28e09d3bb07ce75ab59482f6889e98d5"
         }
       ]
     }
