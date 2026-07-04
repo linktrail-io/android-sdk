@@ -49,7 +49,7 @@ android {
 
 dependencies {
     // The published LinkTrail SDK — the binary AAR from this repo's Maven layout.
-    implementation("linktrail.io:sdk:0.0.2")
+    implementation("linktrail.io:sdk:0.0.3")
 
     implementation(platform("androidx.compose:compose-bom:2024.01.00"))
     implementation("androidx.compose.ui:ui")

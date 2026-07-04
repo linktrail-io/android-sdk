@@ -4,7 +4,7 @@ Mobile **attribution** and **deferred deep linking** for Android. Distributed as
 package `io.linktrail`, entry point `LinkTrail`. (The counterpart of the
 [LinkTrail iOS SDK](https://github.com/linktrail-io/ios-sdk).)
 
-- **Artifact:** `linktrail.io:sdk:0.0.2` · **Min SDK:** 26
+- **Artifact:** `linktrail.io:sdk:0.0.3` · **Min SDK:** 26
 
 ## Install (Gradle)
 
@@ -16,7 +16,7 @@ maven { url = uri("https://raw.githubusercontent.com/linktrail-io/android-sdk/ma
 
 // app/build.gradle.kts
 dependencies {
-    implementation("linktrail.io:sdk:0.0.2")
+    implementation("linktrail.io:sdk:0.0.3")
 }
 ```
 
@@ -93,6 +93,8 @@ adb shell am start -a android.intent.action.VIEW \
 
 ## Changelog
 
+- **0.0.3** — Deferred deep linking fixes: read the `lt_click` token from the Play Install Referrer,
+  send `clickId` as a string token, and parse the `{ install, deepLink }` install response.
 - **0.0.2** — Fix: omit null optional fields from request bodies (the backend rejects an explicit
   `null` `clickId`), which previously made every install/open fail with HTTP 400.
 - **0.0.1** — Initial release.

@@ -3,7 +3,7 @@
   "component": {
     "group": "linktrail.io",
     "module": "sdk",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "attributes": {
       "org.gradle.status": "release"
     }
@@ -33,13 +33,13 @@
       ],
       "files": [
         {
-          "name": "sdk-0.0.2.aar",
-          "url": "sdk-0.0.2.aar",
-          "size": 142721,
-          "sha512": "c1478739f18e7c13c10deb3d64cd7067e2e1721ba533e9612ba430dfeedb26fcf05ddfe4c20c5f9df78cfd7db012782de9083acb5d0ea43d916b4ca354954ab8",
-          "sha256": "7276d01d8a5500759512de78ff355c362e863d18041c55a6373eafc16cb492fa",
-          "sha1": "21c6a355f83cf2c50366a86b9c3f24c983e259f2",
-          "md5": "28e09d3bb07ce75ab59482f6889e98d5"
+          "name": "sdk-0.0.3.aar",
+          "url": "sdk-0.0.3.aar",
+          "size": 142378,
+          "sha512": "bf9dc5ec53b15932cc236ed299fe4bf323b9e3d350ff1258b84b3f860667c8699e998e424ea53348ff5a4b1c31ec400d2f694348d112e5530e7500fb7378ac2e",
+          "sha256": "a3576e444a0c44203af63402fd726f82403bce99a077be3f36d5d0f718748ef8",
+          "sha1": "8618e7efc660da7b7940aaf7c8b00c6818fab179",
+          "md5": "04523c12f6480634d327a781e8099137"
         }
       ]
     },
@@ -90,13 +90,13 @@
       ],
       "files": [
         {
-          "name": "sdk-0.0.2.aar",
-          "url": "sdk-0.0.2.aar",
-          "size": 142721,
-          "sha512": "c1478739f18e7c13c10deb3d64cd7067e2e1721ba533e9612ba430dfeedb26fcf05ddfe4c20c5f9df78cfd7db012782de9083acb5d0ea43d916b4ca354954ab8",
-          "sha256": "7276d01d8a5500759512de78ff355c362e863d18041c55a6373eafc16cb492fa",
-          "sha1": "21c6a355f83cf2c50366a86b9c3f24c983e259f2",
-          "md5": "28e09d3bb07ce75ab59482f6889e98d5"
+          "name": "sdk-0.0.3.aar",
+          "url": "sdk-0.0.3.aar",
+          "size": 142378,
+          "sha512": "bf9dc5ec53b15932cc236ed299fe4bf323b9e3d350ff1258b84b3f860667c8699e998e424ea53348ff5a4b1c31ec400d2f694348d112e5530e7500fb7378ac2e",
+          "sha256": "a3576e444a0c44203af63402fd726f82403bce99a077be3f36d5d0f718748ef8",
+          "sha1": "8618e7efc660da7b7940aaf7c8b00c6818fab179",
+          "md5": "04523c12f6480634d327a781e8099137"
         }
       ]
     }
