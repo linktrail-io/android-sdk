@@ -1,0 +1,14 @@
+# Build output / Gradle
+**/build/
+**/.gradle/
+.gradle/
+
+# Local config (Android SDK path, API key) — never commit
+**/local.properties
+
+# IDE
+.idea/
+*.iml
+
+# macOS
+.DS_Store
