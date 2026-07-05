@@ -73,6 +73,10 @@ Declare your App Links host and (optionally) a custom scheme in the manifest:
 Then host a Digital Asset Links file at `https://<host>/.well-known/assetlinks.json` listing your
 package + signing-cert SHA-256 (LinkTrail infra hosts this for your links).
 
+Links opening the browser or Play Store instead of your installed app? That's almost always App
+Links verification — see [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for the diagnosis commands,
+signing-certificate pitfalls, and the two caches involved.
+
 ## Example app
 
 [`example/`](example/) is **KickFlip**, a small Jetpack Compose storefront that shows deferred
