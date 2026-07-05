@@ -6,6 +6,10 @@
 # Local config (Android SDK path, API key) — never commit
 **/local.properties
 
+# Signing keystores — never commit
+*.jks
+*.keystore
+
 # IDE
 .idea/
 *.iml

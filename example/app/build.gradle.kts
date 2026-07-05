@@ -5,27 +5,48 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-// API key from the untracked local.properties — never commit a real lt_live_ key.
-val linktrailApiKey: String = Properties().apply {
+// API key and release signing from the untracked local.properties — never commit real values.
+val localProps = Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) file.inputStream().use { load(it) }
-}.getProperty("linktrail.apiKey").orEmpty().trim()
+}
+val linktrailApiKey: String = localProps.getProperty("linktrail.apiKey").orEmpty().trim()
 
 android {
     namespace = "io.linktrail.example"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "io.linktrail.example"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 1
-        versionName = "0.0.1"
+        targetSdk = 35
+        versionCode = 2
+        versionName = "0.0.2"
         buildConfigField("String", "LINKTRAIL_API_KEY", "\"$linktrailApiKey\"")
     }
 
+    // Upload keystore for Play Store builds, configured in the untracked local.properties:
+    //   linktrail.storeFile=upload-keystore.jks   (path relative to the example/ root)
+    //   linktrail.storePassword=…
+    //   linktrail.keyAlias=upload
+    //   linktrail.keyPassword=…
+    val storeFilePath = localProps.getProperty("linktrail.storeFile").orEmpty().trim()
+    if (storeFilePath.isNotEmpty()) {
+        signingConfigs {
+            create("release") {
+                storeFile = rootProject.file(storeFilePath)
+                storePassword = localProps.getProperty("linktrail.storePassword")
+                keyAlias = localProps.getProperty("linktrail.keyAlias")
+                keyPassword = localProps.getProperty("linktrail.keyPassword")
+            }
+        }
+    }
+
     buildTypes {
-        release { isMinifyEnabled = false }
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
+        }
     }
 
     buildFeatures {
