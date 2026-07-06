@@ -4,24 +4,23 @@ Mobile **attribution** and **deferred deep linking** for Android. Distributed as
 package `io.linktrail`, entry point `LinkTrail`. (The counterpart of the
 [LinkTrail iOS SDK](https://github.com/linktrail-io/ios-sdk).)
 
-- **Artifact:** `linktrail.io:sdk:0.0.3` · **Min SDK:** 26
+- **Artifact:** `io.linktrail:sdk:0.0.3` (on **Maven Central**) · **Min SDK:** 26
 
 ## Install (Gradle)
 
-Add the LinkTrail Maven repository, then the dependency:
+The SDK is published to **Maven Central**, so no custom repository is needed — just add the
+dependency:
 
 ```kotlin
-// settings.gradle.kts  →  dependencyResolutionManagement { repositories { … } }
-maven { url = uri("https://raw.githubusercontent.com/linktrail-io/android-sdk/main/m2") }
-
 // app/build.gradle.kts
 dependencies {
-    implementation("linktrail.io:sdk:0.0.3")
+    implementation("io.linktrail:sdk:0.0.3")
 }
 ```
 
-Keep `google()` and `mavenCentral()` in your repositories — the SDK's transitive dependencies
-(coroutines, Play Install Referrer, App Set ID) resolve from there.
+`mavenCentral()` is already in the default repositories of every Android project, which also
+resolves the SDK's transitive dependencies (coroutines, Play Install Referrer, App Set ID). Just
+keep `google()` alongside it.
 
 ## Quick start
 
