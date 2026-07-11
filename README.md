@@ -1,12 +1,12 @@
 # LinkTrail Android SDK
 
 Mobile **attribution** and **deferred deep linking** for Android. Distributed as a **binary AAR** —
-package `io.linktrail`, entry point `LinkTrail`. (The counterpart of the
-[LinkTrail iOS SDK](https://github.com/linktrail-io/ios-sdk).)
+package `io.linktrail`, entry point `LinkTrail`. The counterpart of the
+[LinkTrail iOS SDK](https://github.com/linktrail-io/ios-sdk).
 
-- **Artifact:** `io.linktrail:sdk:0.0.3` (on **Maven Central**) · **Min SDK:** 26
+- **Artifact:** `linktrail.io:sdk:0.0.3` (Maven Central) · **Min SDK:** 26
 
-## Install (Gradle)
+## Install
 
 The SDK is published to **Maven Central**, so no custom repository is needed — just add the
 dependency:
@@ -14,13 +14,13 @@ dependency:
 ```kotlin
 // app/build.gradle.kts
 dependencies {
-    implementation("io.linktrail:sdk:0.0.3")
+    implementation("linktrail.io:sdk:0.0.3")
 }
 ```
 
 `mavenCentral()` is already in the default repositories of every Android project, which also
-resolves the SDK's transitive dependencies (coroutines, Play Install Referrer, App Set ID). Just
-keep `google()` alongside it.
+resolves the SDK's transitive dependencies (coroutines, Play Install Referrer, App Set ID). Keep
+`google()` alongside it.
 
 ## Quick start
 
@@ -56,6 +56,29 @@ override fun onNewIntent(intent: Intent) {
 Every callback API also has a coroutine `suspend` twin (`trackInstallAsync`, `handleDeepLinkAsync`,
 `trackEventAsync`). Callbacks are delivered on the main thread.
 
+## More
+
+```kotlin
+// Custom post-install events:
+LinkTrail.shared?.trackEvent("purchase", value = 59.99, currency = "USD")
+
+// Cached results:
+val attribution = LinkTrail.shared?.lastAttribution
+val lastLink = LinkTrail.shared?.lastDeepLink
+
+// Attribution stream (fires when an install is attributed):
+LinkTrail.shared?.onAttribution { attribution -> /* … */ }
+
+// Consent-gated install (defer configure's auto-track, then call manually):
+LinkTrail.configure(context = this, apiKey = "lt_live_…",
+    options = LinkTrailOptions(autoTrackInstall = false))
+LinkTrail.shared?.trackInstall()
+```
+
+`LinkTrailOptions` also takes `logEnabled`, `logLevel`, `requestTimeoutMillis`, `retryPolicy`, and
+`linkDomains`. (App Tracking Transparency / SKAdNetwork are iOS-only and have no Android
+equivalent.)
+
 ## Deep-link setup
 
 Declare your App Links host and (optionally) a custom scheme in the manifest:
@@ -87,22 +110,8 @@ cd example && ./gradlew :app:installDebug
 ```
 
 Add your key to `example/local.properties` (`linktrail.apiKey=lt_live_…`) to run against the live
-backend; without one it routes the simulator's links locally. You can also test from the terminal:
+backend; without one it routes the simulator's links locally. See [example/README.md](example/README.md).
 
-```bash
-adb shell am start -a android.intent.action.VIEW \
-  -d "kickflip://products/aj1?voucher=SUMMER25&discountPercent=25"
-```
+## License
 
-## Changelog
-
-- **0.0.3** — Deferred deep linking fixes: read the `lt_click` token from the Play Install Referrer,
-  send `clickId` as a string token, and parse the `{ install, deepLink }` install response.
-- **0.0.2** — Fix: omit null optional fields from request bodies (the backend rejects an explicit
-  `null` `clickId`), which previously made every install/open fail with HTTP 400.
-- **0.0.1** — Initial release.
-
-## Versioning
-
-Semantic, tag-driven. `x.y.z` — breaking API changes bump the major/minor appropriately. This repo
-carries only the compiled binary; the source is maintained privately.
+Apache License 2.0. See [LICENSE](LICENSE).

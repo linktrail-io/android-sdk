@@ -1,8 +1,8 @@
-# KickFlip — LinkTrail Demo App
+# KickFlip — LinkTrail Android demo
 
 A small Jetpack Compose storefront that shows how the **LinkTrail** SDK's deferred deep linking
 drives where a user lands after installing. It consumes the SDK's **binary AAR** from this repo's
-Maven layout (`../m2`, artifact `linktrail.io:sdk:0.0.1`) — the same way an external app would.
+Maven layout (`../m2`, artifact `linktrail.io:sdk:0.0.3`) — the same way an external app would.
 
 ## Run it
 
@@ -25,11 +25,10 @@ left unconfigured and the **deep-link simulator still works** — it fabricates 
 you can explore the UI first and add the key only when you want the real install/open calls to
 authenticate.
 
-### 2. Build and install
+### 2. Build and run
 
 ```bash
-cd example
-./gradlew :app:installDebug   # then launch KickFlip on the device/emulator
+cd example && ./gradlew :app:installDebug   # then launch KickFlip on the device/emulator
 ```
 
 ## The app
@@ -74,7 +73,7 @@ LinkTrail.shared?.onLink { link, source ->
 | `handleDeepLink(uri)` for the already-installed path | [`MainActivity`](app/src/main/java/io/linktrail/example/MainActivity.kt), forwarded from `onCreate`/`onNewIntent` |
 | App Links (`https://kick.linktrail.io`) + `kickflip://` custom scheme | [`AndroidManifest.xml`](app/src/main/AndroidManifest.xml) |
 
-## Test re-engagement from the terminal
+## Test from the terminal
 
 While the app is installed, the custom scheme routes the same way:
 
