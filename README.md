@@ -4,7 +4,7 @@ Mobile **attribution** and **deferred deep linking** for Android. Distributed as
 package `io.linktrail`, entry point `LinkTrail`. The counterpart of the
 [LinkTrail iOS SDK](https://github.com/linktrail-io/ios-sdk).
 
-- **Artifact:** `linktrail.io:sdk:0.0.3` (Maven Central) · **Min SDK:** 26
+- **Artifact:** `io.linktrail:sdk:0.0.3` (Maven Central) · **Min SDK:** 26
 
 ## Install
 
@@ -14,7 +14,7 @@ dependency:
 ```kotlin
 // app/build.gradle.kts
 dependencies {
-    implementation("linktrail.io:sdk:0.0.3")
+    implementation("io.linktrail:sdk:0.0.3")
 }
 ```
 
