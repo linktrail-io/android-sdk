@@ -19,17 +19,24 @@ body:
   - type: input
     id: android-version
     attributes:
-      label: Android version / API level
+      label: Android OS version / API level
       placeholder: "Android 14 (API 34)"
     validations:
       required: true
   - type: input
-    id: device
+    id: device-vendor
     attributes:
-      label: Device or emulator
-      placeholder: "Pixel 7 · or Emulator Pixel 6 API 34"
+      label: Device vendor / manufacturer
+      placeholder: "Samsung · Google · Xiaomi · OnePlus · (or Emulator)"
     validations:
-      required: false
+      required: true
+  - type: input
+    id: device-model
+    attributes:
+      label: Device model
+      placeholder: "Galaxy S23 · Pixel 7 · (or Emulator Pixel 6 API 34)"
+    validations:
+      required: true
   - type: textarea
     id: description
     attributes:
