@@ -2,7 +2,7 @@
 
 A small Jetpack Compose storefront that shows how the **LinkTrail** SDK's deferred deep linking
 drives where a user lands after installing. It consumes the SDK from **Maven Central**
-(`io.linktrail:sdk:0.0.3`) — the same way an external app would.
+(`io.linktrail:sdk:0.0.4`) — the same way an external app would.
 
 ## Run it
 

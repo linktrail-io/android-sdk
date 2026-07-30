@@ -4,7 +4,7 @@ Mobile **attribution** and **deferred deep linking** for Android. Distributed as
 package `io.linktrail`, entry point `LinkTrail`. The counterpart of the
 [LinkTrail iOS SDK](https://github.com/linktrail-io/ios-sdk).
 
-- **Artifact:** `io.linktrail:sdk:0.0.3` (Maven Central) · **Min SDK:** 26
+- **Artifact:** `io.linktrail:sdk:0.0.4` (Maven Central) · **Min SDK:** 26
 
 ## Install
 
@@ -14,7 +14,7 @@ dependency:
 ```kotlin
 // app/build.gradle.kts
 dependencies {
-    implementation("io.linktrail:sdk:0.0.3")
+    implementation("io.linktrail:sdk:0.0.4")
 }
 ```
 
@@ -56,6 +56,31 @@ override fun onNewIntent(intent: Intent) {
 Every callback API also has a coroutine `suspend` twin (`trackInstallAsync`, `handleDeepLinkAsync`,
 `trackEventAsync`). Callbacks are delivered on the main thread.
 
+## Consent gating
+
+Consent gating is **on by default** (`requireConsent = true`) and follows the "links work, tracking
+waits" model: until the user consents, **deep links still route** — deferred and re-engagement links
+reach their destination via `onLink` — but **no attribution is recorded**. The install is sent with
+`consent = false`, so the backend resolves the link for routing yet stores nothing, exposes no
+attribution, and drops events. Consent is **deny-by-default**: an unset flag counts as no consent.
+
+When the user accepts your consent prompt, grant it:
+
+```kotlin
+LinkTrail.shared?.setConsent(true)   // sends the real attributed install + flushes queued events
+```
+
+This attributes the install and flushes queued events **without re-routing** a user already sent to
+their screen. Revoke with `setConsent(false)` (clears the event queue). The flow:
+
+1. `configure(...)` — links route immediately; the install is held **unattributed** (`consent = false`).
+2. User accepts → `setConsent(true)` → attributed install is sent, queued events flush.
+3. User declines → do nothing (or `setConsent(false)`); routing keeps working, nothing is tracked.
+
+To attribute at init with no gate, opt out: `LinkTrailOptions(requireConsent = false)`. (Separately,
+`autoTrackInstall = false` defers the install call entirely so you can send it yourself via
+`trackInstall()`.)
+
 ## More
 
 ```kotlin
@@ -68,11 +93,6 @@ val lastLink = LinkTrail.shared?.lastDeepLink
 
 // Attribution stream (fires when an install is attributed):
 LinkTrail.shared?.onAttribution { attribution -> /* … */ }
-
-// Consent-gated install (defer configure's auto-track, then call manually):
-LinkTrail.configure(context = this, apiKey = "lt_live_…",
-    options = LinkTrailOptions(autoTrackInstall = false))
-LinkTrail.shared?.trackInstall()
 ```
 
 `LinkTrailOptions` also takes `logEnabled`, `logLevel`, `requestTimeoutMillis`, `retryPolicy`, and
