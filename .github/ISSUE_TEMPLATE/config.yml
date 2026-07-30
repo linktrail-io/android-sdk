@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Troubleshooting guide
+    url: https://github.com/linktrail-io/android-sdk/blob/main/TROUBLESHOOTING.md
+    about: App Links or deep linking not working? The troubleshooting guide often has the fix first.

@@ -138,6 +138,14 @@ cd example && ./gradlew :app:installDebug
 Add your key to `example/local.properties` (`linktrail.apiKey=lt_live_…`) to run against the live
 backend; without one it routes the simulator's links locally. See [example/README.md](example/README.md).
 
+## Issues & feedback
+
+Hit a bug, or something not behaving as documented? **Everyone is encouraged to
+[open an issue](https://github.com/linktrail-io/android-sdk/issues/new/choose)** — no problem is too
+small, and a quick report helps us make the SDK better for everyone. Picking a template walks you
+through the details we need. For App Links / deep-linking problems, the
+[troubleshooting guide](TROUBLESHOOTING.md) is often the fastest fix.
+
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
