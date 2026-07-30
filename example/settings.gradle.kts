@@ -10,10 +10,8 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
+        // The LinkTrail SDK resolves from Maven Central (io.linktrail:sdk), same as any app.
         mavenCentral()
-        // The LinkTrail SDK AAR is hosted in this repo under /m2. External apps point at the raw
-        // GitHub URL instead (see the top-level README); this demo resolves it from the local copy.
-        maven { url = uri("${rootDir}/../m2") }
     }
 }
 

@@ -1,8 +1,8 @@
 # KickFlip — LinkTrail Android demo
 
 A small Jetpack Compose storefront that shows how the **LinkTrail** SDK's deferred deep linking
-drives where a user lands after installing. It consumes the SDK's **binary AAR** from this repo's
-Maven layout (`../m2`, artifact `linktrail.io:sdk:0.0.3`) — the same way an external app would.
+drives where a user lands after installing. It consumes the SDK from **Maven Central**
+(`io.linktrail:sdk:0.0.3`) — the same way an external app would.
 
 ## Run it
 
