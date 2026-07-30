@@ -71,12 +71,3 @@ body:
       render: shell
     validations:
       required: false
-  - type: checkboxes
-    id: checks
-    attributes:
-      label: Before submitting
-      options:
-        - label: I checked the [troubleshooting guide](https://github.com/linktrail-io/android-sdk/blob/main/TROUBLESHOOTING.md) (especially for App Links / deep-linking issues)
-          required: false
-        - label: I searched existing issues and this isn't a duplicate
-          required: false
