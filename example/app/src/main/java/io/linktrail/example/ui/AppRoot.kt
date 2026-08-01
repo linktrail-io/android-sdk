@@ -58,6 +58,11 @@ fun AppRoot(store: Store) {
             Box(Modifier.fillMaxSize().padding(padding)) {
                 when (val screen = store.screen) {
                     Screen.Home -> HomeScreen(store)
+                    is Screen.CategoryPage -> CategoryScreen(
+                        store = store,
+                        category = screen.category,
+                        onBack = store::goHome,
+                    )
                     is Screen.ProductDetail -> ProductScreen(
                         product = screen.product,
                         voucher = screen.voucher,
