@@ -3,9 +3,12 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Backup disabled on purpose: Auto Backup restores SharedPreferences on Play reinstalls,
+         resurrecting the SDK's install-tracked/consent state and breaking fresh-install
+         (deferred deep link) testing. Attribution SDK hosts should exclude SDK prefs from backup. -->
     <application
         android:name=".KickFlipApp"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"

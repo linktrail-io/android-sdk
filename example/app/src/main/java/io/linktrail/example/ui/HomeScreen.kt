@@ -79,7 +79,7 @@ private fun CategoryBar(selected: Category, onSelect: (Category) -> Unit) {
 }
 
 @Composable
-private fun ProductCard(product: Product, onClick: () -> Unit) {
+internal fun ProductCard(product: Product, onClick: () -> Unit) {
     Column(Modifier.clickable(onClick = onClick)) {
         Box(
             modifier = Modifier

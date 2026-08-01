@@ -20,8 +20,8 @@ android {
         applicationId = "io.linktrail.example"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.0.2"
+        versionCode = 15
+        versionName = "0.0.15"
         buildConfigField("String", "LINKTRAIL_API_KEY", "\"$linktrailApiKey\"")
     }
 
@@ -70,7 +70,7 @@ android {
 
 dependencies {
     // The published LinkTrail SDK — resolved from Maven Central.
-    implementation("io.linktrail:sdk:0.0.4")
+    implementation("io.linktrail:sdk:0.0.5")
 
     implementation(platform("androidx.compose:compose-bom:2024.01.00"))
     implementation("androidx.compose.ui:ui")

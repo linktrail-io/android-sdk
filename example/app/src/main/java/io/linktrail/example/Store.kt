@@ -11,6 +11,7 @@ import io.linktrail.model.LinkTrailLinkSource
 /** The screen the store is showing. */
 sealed interface Screen {
     data object Home : Screen
+    data class CategoryPage(val category: Category) : Screen
     data class ProductDetail(val product: Product, val voucher: Voucher?) : Screen
 }
 
@@ -47,8 +48,9 @@ class Store : ViewModel() {
 
             path.startsWith("/category/") -> {
                 val name = path.substringAfterLast('/')
-                selectedCategory = Category.entries.firstOrNull { it.label.equals(name, ignoreCase = true) } ?: Category.ALL
-                screen = Screen.Home
+                val category = Category.entries.firstOrNull { it.label.equals(name, ignoreCase = true) } ?: Category.ALL
+                selectedCategory = category
+                screen = Screen.CategoryPage(category) // a distinct screen, so the deep link visibly navigates
             }
 
             else -> {
@@ -89,7 +91,7 @@ enum class SimScenario(val title: String, val subtitle: String, val link: LinkTr
     ),
     CATEGORY(
         "Category selected",
-        "deepLinkPath: \"/category/running\" → Home, Running pre-selected",
+        "deepLinkPath: \"/category/running\" → Running category screen",
         LinkTrailDeepLink(deepLinkPath = "/category/running"),
     ),
     PRODUCT(
