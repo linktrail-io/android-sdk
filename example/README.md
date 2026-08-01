@@ -54,6 +54,21 @@ real install.
 The simulator fabricates the deferred link locally so you don't need a real click → install
 round-trip. In production these arrive from the SDK — no code changes in the app.
 
+## Consent gating
+
+On first launch the app shows a **consent prompt**. It demonstrates the SDK's consent model
+(`requireConsent = true` by default): links route regardless, but attribution is only recorded once
+consent is granted.
+
+- **Accept** → `LinkTrail.shared?.setConsent(true)` — the install is attributed and queued events flush.
+- **Decline** → `LinkTrail.shared?.setConsent(false)` — links still work, nothing is tracked.
+
+The top-bar indicator shows the current choice (**🟢** granted · **⚪** declined · **🔒** undecided);
+tap it to re-open the prompt and flip consent as often as you like. With logging on
+(`adb logcat -s LinkTrail`) you can watch the install fire only after consent is granted. The choice
+and the one-line SDK call live in
+[`Consent`](app/src/main/java/io/linktrail/example/ui/ConsentDialog.kt).
+
 ## How it maps to the SDK
 
 The entire integration is one method —
@@ -71,6 +86,7 @@ LinkTrail.shared?.onLink { link, source ->
 | `LinkTrail.configure(context, apiKey, options)` in `Application.onCreate()` | [`KickFlipApp`](app/src/main/java/io/linktrail/example/KickFlipApp.kt) |
 | `onLink { link, source -> … }` — the one routing hook | [`MainActivity`](app/src/main/java/io/linktrail/example/MainActivity.kt) → [`Store`](app/src/main/java/io/linktrail/example/Store.kt) |
 | `handleDeepLink(uri)` for the already-installed path | [`MainActivity`](app/src/main/java/io/linktrail/example/MainActivity.kt), forwarded from `onCreate`/`onNewIntent` |
+| `setConsent(granted)` — gate attribution on user consent | [`Consent`](app/src/main/java/io/linktrail/example/ui/ConsentDialog.kt) ← [`AppRoot`](app/src/main/java/io/linktrail/example/ui/AppRoot.kt) |
 | App Links (`https://kick.linktrail.io`) + `kickflip://` custom scheme | [`AndroidManifest.xml`](app/src/main/AndroidManifest.xml) |
 
 ## Test from the terminal
