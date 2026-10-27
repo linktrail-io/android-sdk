@@ -70,7 +70,7 @@ android {
 
 dependencies {
     // The published LinkTrail SDK — resolved from Maven Central.
-    implementation("io.linktrail:sdk:0.0.5")
+    implementation("io.linktrail:sdk:0.1.0")
 
     implementation(platform("androidx.compose:compose-bom:2024.01.00"))
     implementation("androidx.compose.ui:ui")
