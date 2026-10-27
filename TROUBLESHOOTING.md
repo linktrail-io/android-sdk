@@ -11,6 +11,10 @@ demo (`io.linktrail.example`, `kick.linktrail.io`) are used in examples — subs
 | Fresh install routes correctly, but with the app **already installed** the link opens the browser / Play Store | App Links verification failed on the device | [1](#1-link-opens-the-browser--play-store-instead-of-the-installed-app) |
 | Link opens the app, but lands on the wrong screen | Path not handled by your routing code | [5](#5-app-opens-but-lands-on-the-wrong-screen) |
 | First-launch (deferred) link never arrives | SDK not configured / no API key | [6](#6-deferred-deep-link-not-delivered-on-first-launch) |
+| Nothing is sent; log shows `Install held — awaiting consent decision` | Consent not decided yet (expected) | [8](#8-install-held--awaiting-consent-decision) |
+| `onError` gets `LinkTrailError.InvalidApiKey` / HTTP `401` | Wrong, revoked or unauthorized API key | [9](#9-401--invalid-api-key) |
+| HTTP `404 No app found for this identifier` | Package name not registered in the key's workspace | [10](#10-404-no-app-found-for-this-identifier) |
+| A custom-domain link opens the app but never routes (`Not a LinkTrail link — ignoring`) | Host missing from `linkDomains` | [11](#11-custom-domain-links-are-ignored-linkdomains) |
 | Typing the URL in Chrome's address bar opens the website, not the app | Expected Android behavior — not a bug | [4](#4-address-bar-navigation-never-opens-the-app) |
 
 ---
@@ -142,7 +146,8 @@ simulate the tap:
 adb shell am start -a android.intent.action.VIEW -d "https://kick.linktrail.io/discounted-product"
 ```
 
-For custom-scheme (non-verified) deep links:
+For custom-scheme (non-verified) deep links. The SDK doesn't claim these (`handleDeepLink`
+returns `false`); in the demo the app's own routing handles them:
 
 ```bash
 adb shell am start -a android.intent.action.VIEW \
@@ -177,10 +182,17 @@ LinkTrail.shared?.onLink { link, source ->
 - The SDK must be configured with a valid API key (`lt_live_…`) — `LinkTrail.configure` in
   `Application.onCreate()`. Without it there is no backend call, so there is nothing to defer.
   (An invalid key surfaces as `LinkTrailError.InvalidApiKey` via `onError`.)
-- Register `onLink` **before** or immediately after `configure` (in the demo: in
-  `MainActivity.onCreate`) so the callback isn't missed.
+- Consent is required by default: the install (and so the deferred link) is held until your app
+  calls `setConsent`. See [8](#8-install-held--awaiting-consent-decision).
+- You can register `onLink` late (after a splash or login screen): the deferred link is saved and
+  delivered when the handler is set, even on a later launch. A link not delivered within **7 days**
+  is dropped.
 - Deferred matching only triggers on a genuine first launch after install. To re-test, uninstall
-  the app, click a LinkTrail link, then reinstall and launch.
+  the app, click a LinkTrail link, then reinstall and launch (or use `LinkTrail.resetForTesting`
+  in a debug build; see the README's Testing section).
+- Testing with `adb install` on an emulator? There is no Play Install Referrer. In a debuggable
+  build, fake one with `adb shell setprop debug.linktrail.referrer "lt_click=<32-hex token>"`
+  before the first launch. Release builds never read it.
 
 ---
 
@@ -209,6 +221,59 @@ Note: with no API key configured the SDK is never initialized, so `-s LinkTrail`
 use the `--pid` variant to see general app output in that case.
 
 ---
+
+## 8. Install held — awaiting consent decision
+
+Expected, not a bug. Consent gating is on by default (`requireConsent = true`), so **nothing is
+sent** until your app records the user's decision:
+
+```kotlin
+LinkTrail.shared?.setConsent(granted = true)    // counted + attributed install, routes, flushes events
+LinkTrail.shared?.setConsent(granted = false)   // one uncounted install, no device id; still routes
+```
+
+- Both answers release the held install. An app that never calls `setConsent` records nothing.
+- The answer lives in device-only storage, so after a backup restore or on a new phone it is gone
+  and the install is held again. Show your consent UI whenever the SDK has no answer.
+- Handling consent elsewhere? `LinkTrailOptions(requireConsent = false)`. An explicit
+  `setConsent(false)` still wins.
+- `trackInstall(force = true)` does not skip the hold.
+
+---
+
+## 9. `401` / invalid API key
+
+`onError` receives `LinkTrailError.InvalidApiKey` when the backend rejects the key: it is unknown,
+revoked, or not authorized for this app. Copy the SDK key (`lt_live_…`) again from the LinkTrail
+dashboard for the right workspace. A blank key throws `LinkTrailError.MissingApiKey` from
+`configure` without any request.
+
+---
+
+## 10. `404 No app found for this identifier`
+
+The key is valid, but the app's package name (`applicationId`) isn't registered in that key's
+workspace. Add the Android app in the dashboard with the exact `applicationId` of the build you're
+running (watch for `.debug` suffixes on debug build types).
+
+---
+
+## 11. Custom-domain links are ignored (`linkDomains`)
+
+From 0.1.0, `handleDeepLink` always claims `*.linktrail.io` links, and **every custom link domain
+must be listed** in `linkDomains`. An unlisted host opens the app (App Links still verify) but the SDK
+returns `false` and logs `Not a LinkTrail link — ignoring: <url>` at DEBUG, so nothing routes.
+
+```kotlin
+LinkTrail.configure(context, "lt_live_…", LinkTrailOptions(linkDomains = listOf("go.example.com")))
+```
+
+An empty `linkDomains` means "only `*.linktrail.io`", not "every link". Don't clear it to fix
+routing; add the missing host. Subdomains of a listed host are included.
+
+---
+
+More help: [docs.linktrail.io/troubleshooting](https://docs.linktrail.io/troubleshooting).
 
 ## adb cheat sheet
 
