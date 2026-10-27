@@ -40,16 +40,22 @@ LinkTrail.shared?.onLink { link, source ->
 LinkTrail.shared?.onError { error -> /* e.g. LinkTrailError.InvalidApiKey */ }
 ```
 
-The install is tracked automatically by `configure`. Forward incoming links from your Activity:
+The install is tracked automatically by `configure` (held until the user's consent decision, see
+below). Forward incoming links from your Activity:
 
 ```kotlin
 override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    LinkTrail.shared?.handleDeepLink(intent?.data)
+    route(intent?.data)
 }
 override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
-    LinkTrail.shared?.handleDeepLink(intent.data)
+    route(intent.data)
+}
+
+private fun route(uri: Uri?) {
+    if (LinkTrail.shared?.handleDeepLink(uri) == true) return   // a LinkTrail link: onLink fires
+    // Not a LinkTrail link (your own myapp:// links, OAuth callbacks, ...): handle it yourself.
 }
 ```
 
@@ -58,28 +64,66 @@ Every callback API also has a coroutine `suspend` twin (`trackInstallAsync`, `ha
 
 ## Consent gating
 
-Consent gating is **on by default** (`requireConsent = true`) and follows the "links work, tracking
-waits" model: until the user consents, **deep links still route** — deferred and re-engagement links
-reach their destination via `onLink` — but **no attribution is recorded**. The install is sent with
-`consent = false`, so the backend resolves the link for routing yet stores nothing, exposes no
-attribution, and drops events. Consent is **deny-by-default**: an unset flag counts as no consent.
+Consent gating is **on by default** (`requireConsent = true`), for GDPR / ePrivacy. The SDK **holds
+until the user decides**:
 
-When the user accepts your consent prompt, grant it:
+- **Before `setConsent`:** nothing is sent. The install is held (not lost), and events are dropped.
+- **`setConsent(true)`:** the install is sent with `consent = true`. It is **counted and attributed**,
+  the deferred link is **routed** through `onLink`, and queued events are flushed.
+- **`setConsent(false)`:** **one uncounted install** is sent with `consent = false` and **no device
+  id**. The backend resolves the deferred link so the user still lands on the right screen, and
+  records nothing. Events are dropped. The denial isn't re-sent on later launches.
 
 ```kotlin
-LinkTrail.shared?.setConsent(true)   // sends the real attributed install + flushes queued events
+LinkTrail.configure(context, "lt_live_…")           // install held until a decision
+// … once your consent UI resolves:
+LinkTrail.shared?.setConsent(granted = true)         // counted + attributed install, routes, flushes events
+// LinkTrail.shared?.setConsent(granted = false)     // one uncounted install, no device id; still routes
 ```
 
-This attributes the install and flushes queued events **without re-routing** a user already sent to
-their screen. Revoke with `setConsent(false)` (clears the event queue). The flow:
+Granting after a denial, on the same launch or a later one, sends the counted install then and routes
+the deferred link if the denial couldn't. A deferred link is routed **at most once**, so a user who
+already reached their screen is never re-routed. Re-engagement links always route; without consent
+they use a non-recording resolve. The decision persists across launches (on this device, see
+[Data and privacy](#data-and-privacy)).
 
-1. `configure(...)` — links route immediately; the install is held **unattributed** (`consent = false`).
-2. User accepts → `setConsent(true)` → attributed install is sent, queued events flush.
-3. User declines → do nothing (or `setConsent(false)`); routing keeps working, nothing is tracked.
+To attribute at init without waiting for an answer, opt out: `LinkTrailOptions(requireConsent =
+false)`; an explicit `setConsent(false)` still wins. (Separately, `autoTrackInstall = false` lets you
+send the install yourself via `trackInstall()`; it is still held until `setConsent`, and `force`
+never skips the hold.)
 
-To attribute at init with no gate, opt out: `LinkTrailOptions(requireConsent = false)`. (Separately,
-`autoTrackInstall = false` defers the install call entirely so you can send it yourself via
-`trackInstall()`.)
+## Deferred deep links
+
+Android gets deferred linking the **deterministic** way: the Play Install Referrer supplies a click
+token on first launch, which the SDK sends with the install. You can register `onLink` whenever your
+app is ready to route, for example after a splash or login screen. The deferred link is delivered
+**at least once**:
+
+- When the install response carries a link, the SDK saves it to disk straight away.
+- If `onLink` is already set, the link is delivered at once. Otherwise it is delivered (on the main
+  thread, with `source = DEFERRED`) as soon as `onLink` is set, in the same launch or a later one,
+  even if the app was killed in between.
+- The link is marked routed only after your handler has been called. If your handler crashes, the
+  link may be delivered once more on the next launch, so make routing idempotent.
+- A saved link that hasn't been delivered within **7 days** is dropped.
+- The install is never re-sent for this; only the delivery is retried.
+
+## Data and privacy
+
+The SDK keeps its state on the device only: the install and deferred-link flags, the consent answer,
+the device id, the cached attribution and the offline event queue. It is one small file in the app's
+[`noBackupFilesDir`](https://developer.android.com/reference/android/content/Context#getNoBackupFilesDir()).
+Android Auto Backup and device-to-device transfer never copy that folder, so:
+
+- **A reinstall restored from backup, or a new phone, starts fresh.** The install is sent again and
+  its deferred link is routed; the new device gets its own device id.
+- **Consent stays with the device.** After a restore the consent answer is gone too, so the SDK holds
+  the install again. Show your consent UI whenever the SDK has no answer, not only on the very first
+  launch.
+- **No setup is needed.** You don't need `fullBackupContent` or `dataExtractionRules` rules for the
+  SDK, and your `android:allowBackup` setting doesn't affect it. If you keep your own copy of the
+  consent answer in backed-up storage, exclude it too, or it will disagree with the SDK after a
+  restore.
 
 ## More
 
@@ -96,7 +140,7 @@ LinkTrail.shared?.onAttribution { attribution -> /* … */ }
 ```
 
 `LinkTrailOptions` also takes `logEnabled`, `logLevel`, `requestTimeoutMillis`, `retryPolicy`, and
-`linkDomains`. (App Tracking Transparency / SKAdNetwork are iOS-only and have no Android
+`linkDomains` (see [Which links the SDK claims](#which-links-the-sdk-claims)). (App Tracking Transparency / SKAdNetwork are iOS-only and have no Android
 equivalent.)
 
 ## Deep-link setup
@@ -119,11 +163,30 @@ Links opening the browser or Play Store instead of your installed app? That's al
 Links verification — see [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for the diagnosis commands,
 signing-certificate pitfalls, and the two caches involved.
 
-**List every link host in `linkDomains`.** When `linkDomains` is non-empty, the SDK routes
-re-engagement opens (app already installed) *only* for those hosts — a link on an unlisted host
-opens the app but never navigates. Deferred (install-time) links skip this check and route
-regardless, so a missing host can look fine on a fresh install yet fail once the app is installed.
-Leave `linkDomains` empty (the default) to handle every parseable link.
+### Which links the SDK claims
+
+`handleDeepLink` returns `true` only for a LinkTrail link, which needs all three:
+
+1. the scheme is `https` (`http` is accepted in debuggable builds only);
+2. the host (case, port and a trailing dot ignored; internationalised names compared in punycode) is
+   `linktrail.io` or a subdomain of it, or a `linkDomains` entry or a subdomain of it. A URL whose
+   authority contains `\`, `%`, whitespace or a control character, has a bad port, or whose host
+   isn't a valid host name, is never claimed;
+3. the path has a slug (`https://kick.linktrail.io/` alone is not a link).
+
+Anything else, such as `mailto:`, `file:`, your own `myapp://settings` or an OAuth callback like
+`https://accounts.example.com/cb?code=…`, returns `false` (`handleDeepLinkAsync` throws
+`LinkTrailError.NotALinkTrailUrl`). No request is sent and `onError` is not called. An empty
+`linkDomains` (the default) means only `*.linktrail.io` links are claimed, **not** every link.
+
+If your links use a **custom domain**, list it at configure, or its links won't be claimed:
+
+```kotlin
+LinkTrail.configure(context, "lt_live_…", LinkTrailOptions(linkDomains = listOf("go.example.com")))
+```
+
+Entries are normalised (`"https://Go.Example.com:443/x"` becomes `"go.example.com"`); empty or
+invalid ones are ignored with a warning. Order and duplicates don't matter.
 
 ## Example app
 
