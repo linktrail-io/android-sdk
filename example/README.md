@@ -57,11 +57,11 @@ round-trip. In production these arrive from the SDK — no code changes in the a
 ## Consent gating
 
 On first launch the app shows a **consent prompt**. It demonstrates the SDK's consent model
-(`requireConsent = true` by default): links route regardless, but attribution is only recorded once
-consent is granted.
+(`requireConsent = true` by default): nothing is sent until the user decides, and either answer still
+routes the deferred link.
 
-- **Accept** → `LinkTrail.shared?.setConsent(true)` — the install is attributed and queued events flush.
-- **Decline** → `LinkTrail.shared?.setConsent(false)` — links still work, nothing is tracked.
+- **Accept** → `LinkTrail.shared?.setConsent(true)` — the install is counted and attributed, the deferred link routes, queued events flush.
+- **Decline** → `LinkTrail.shared?.setConsent(false)` — one uncounted install with no device id; the deferred link still routes, nothing is tracked.
 
 The top-bar indicator shows the current choice (**🟢** granted · **⚪** declined · **🔒** undecided);
 tap it to re-open the prompt and flip consent as often as you like. With logging on
