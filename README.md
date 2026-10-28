@@ -305,6 +305,18 @@ small, and a quick report helps us make the SDK better for everyone. Picking a t
 through the details we need. For App Links / deep-linking problems, the
 [troubleshooting guide](TROUBLESHOOTING.md) is often the fastest fix.
 
+## Auto-merge
+
+Put `auto-merge` anywhere in a PR title (any case, e.g. `[auto-merge] Fix typo`) and the
+`Auto-merge` workflow (`.github/workflows/auto-merge.yml`) turns on GitHub auto-merge for it.
+GitHub then merges it with a merge commit (never squash, so stacked PRs keep working) once the
+required checks and approvals pass. Drafts are skipped: auto-merge turns on when the PR is marked
+ready for review. Remove the word from the title, or convert the PR back to draft, to turn it off.
+PRs from forks are ignored. Until the `AUTOMERGE_TOKEN` org secret exists, the merge is made with
+`GITHUB_TOKEN`, which does not trigger the push workflows on the base branch.
+
+This repo's `main` ruleset requires an approving review, so auto-merge completes only after the PR is approved.
+
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
