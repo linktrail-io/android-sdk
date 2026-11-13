@@ -2,6 +2,28 @@
 
 All notable changes to the LinkTrail Android SDK (`io.linktrail:sdk`).
 
+## [0.2.0] - 2026-11-12
+
+### Added
+- **`onLink(null)` removes the link handler**, for example in `onDestroy`. Links that resolve while
+  no handler is set are kept and delivered once to the next handler.
+
+### Fixed
+- **The device id is now a random per-install UUID**, not the Play App Set ID, so installs of
+  several apps from the same developer, and reinstalls, are each recorded correctly. The
+  `play-services-appset` dependency is removed. Ids saved by an older SDK are kept once the install
+  has been counted.
+- **A re-engagement link that resolves before `onLink` is set is no longer dropped.** The latest
+  one is held for this launch and delivered once, with `source = REENGAGEMENT`, when `onLink` is
+  registered. If a deferred link is waiting too, the deferred link is delivered first.
+- **The Play Install Referrer `lt_click` token is matched as a whole parameter** (exactly 32
+  lowercase hex characters), including in a percent-encoded referrer.
+- **`trackEvent` validates its arguments before sending.** A blank name, a `value` that is NaN,
+  infinite or negative, or a `currency` that isn't 3 letters is reported as
+  `LinkTrailError.InvalidEvent(reason)`, and nothing is sent.
+- **A consent denial made just before an install, open or event is sent now always wins.** The
+  install goes out as the denied install, and no open or event is sent (links still route).
+
 ## [0.1.0] - 2026-10-27
 
 ### Changed
