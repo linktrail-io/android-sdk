@@ -1,0 +1,14 @@
+# Deferred (REAL) · per_event reward link (reward_links.per_event; no prod link yet: skipped) · consent allow
+# Run by scripts/e2e-maestro.sh only when an SDK key is set and the environment has the link. As in
+# deferred_custom_allow.yaml, the script makes a real click, stages its lt_click token through the debug
+# fake Play referrer and installs the app fresh. After this flow it sends
+# the reward's events (scripts/e2e-verify.py plan-events, sent through the example app's debug hook kickflip://e2e/event) and checks the earning against the contract formula.
+appId: io.linktrail.demo.store
+---
+- launchApp
+- extendedWaitUntil: { visible: "Allow tracking?", timeout: 30000 }
+- tapOn: { id: "tracking-allow" }
+# Consent gates attribution, not navigation: both answers route to the linked product + voucher.
+# E2E_VOUCHER / E2E_PRODUCT_RE come from scripts/e2e-env.py (link_type_expect: same customData as the link types).
+- extendedWaitUntil: { visible: "Voucher ${E2E_VOUCHER} applied.*", timeout: 30000 }
+- assertVisible: { id: "product-name", text: "${E2E_PRODUCT_RE}" }

@@ -1,0 +1,19 @@
+# Deferred (REAL, probabilistic) · custom host · consent deny — Android twin of iOS scripts/deferred_custom_deny_problistic.yaml
+# Run by scripts/e2e-maestro.sh only when an SDK key is set. Before this flow the script makes a real
+# click on the custom_problistic_link (Android Chrome UA, same public IP as the emulator) and installs the app fresh with
+# NO referrer staged, so the install carries no click token: only the backend's IP + platform match
+# can attribute it. Afterwards it checks logcat for a successful install response and that no
+# lt_click token was read.
+appId: io.linktrail.demo.store
+---
+- launchApp
+- extendedWaitUntil: { visible: "Allow tracking?", timeout: 30000 }
+- tapOn: { id: "tracking-deny" }
+# Not asserting the product page or the home title ("KickFlip", home only): the backend's probabilistic
+# (IP) match may or may not attribute the install, so the app lands on home or routes to the product page
+#. The debug device id
+# label below is on every storefront screen, so it is the storefront wait.
+# Debug label with the SDK device id (example app, debug builds only): wait until it is on screen, so
+# scripts/e2e-maestro.sh reads it ("none": a denied install mints no device id, the device lookup is
+# not checkable and the row is skipped; a label it can't read fails).
+- extendedWaitUntil: { visible: { id: "e2e-device-id" }, timeout: 30000 }

@@ -1,0 +1,11 @@
+# Deferred (simulated) · Home · Running selected · consent deny
+appId: io.linktrail.demo.store
+---
+- launchApp: { clearState: true }
+- extendedWaitUntil: { visible: "Allow tracking?", timeout: 20000 }
+- tapOn: { id: "tracking-deny" }
+- tapOn: { id: "simulate-link" }
+- tapOn: { id: "scenario-category" }
+- assertVisible: { id: "home" }
+- assertVisible: { id: "product-card-uboost" }
+- assertNotVisible: { id: "product-card-aj1" }
