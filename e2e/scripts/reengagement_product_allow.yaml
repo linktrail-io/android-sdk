@@ -1,0 +1,9 @@
+# Re-engagement · Product · Air Jordan 1 · consent allow
+appId: io.linktrail.demo.store
+---
+- launchApp: { clearState: true }
+- extendedWaitUntil: { visible: "Allow tracking?", timeout: 20000 }
+- tapOn: { id: "tracking-allow" }
+- openLink: "kickflip://products/aj1"
+- assertVisible: { id: "product-name", text: "Air Jordan 1" }
+- assertNotVisible: { id: "voucher-badge" }

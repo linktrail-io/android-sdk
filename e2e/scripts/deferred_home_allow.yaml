@@ -1,0 +1,11 @@
+# Deferred (simulated) · Home · consent allow
+appId: io.linktrail.demo.store
+---
+- launchApp: { clearState: true }
+- extendedWaitUntil: { visible: "Allow tracking?", timeout: 20000 }
+- tapOn: { id: "tracking-allow" }
+- tapOn: { id: "simulate-link" }
+- tapOn: { id: "scenario-home" }
+- assertVisible: "KickFlip"
+- assertVisible: { id: "home" }
+- assertVisible: { id: "product-card-aj1" }

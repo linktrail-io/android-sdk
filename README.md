@@ -201,6 +201,9 @@ cd example && ./gradlew :app:installDebug
 Add your key to `example/local.properties` (`linktrail.apiKey=lt_live_…`) to run against the live
 backend; without one it routes the simulator's links locally. See [example/README.md](example/README.md).
 
+The end-to-end tests in [`e2e/`](e2e/) run Maestro against the **published** artifact from Maven
+Central, on every PR that touches them and nightly. See [e2e/README.md](e2e/README.md).
+
 ## Issues & feedback
 
 Hit a bug, or something not behaving as documented? **Everyone is encouraged to

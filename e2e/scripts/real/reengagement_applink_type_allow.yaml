@@ -1,0 +1,21 @@
+# Re-engagement (REAL) · https App Link on a link-type link · app already installed · consent allow
+# Link-type rows only (reengagement_applink_type_allow__<type>; link_type_only in scripts/e2e-flows.json).
+# Before this flow scripts/e2e-maestro.sh installs the app through the type's link: a real click, its
+# lt_click staged via the debug fake Play referrer, then real/deferred_custom_allow.yaml (a counted install
+# routed to the product + voucher), and reads the backend's baseline for that click. This flow then
+# opens the same link as an App Link on the installed app (the script approves the custom host for it).
+# allow: the SDK sends POST /v1/events/open (recorded): the backend's openCount for the click goes up by 1;
+# installCount never changes, so no second reward is paid (scripts/e2e-verify.py).
+appId: io.linktrail.demo.store
+---
+- stopApp
+# State is kept: the app keeps its install, and its consent answer, from the install step.
+- launchApp
+- extendedWaitUntil: { visible: "KickFlip", timeout: 30000 }
+# The consent gate was answered in the install step and is not asked again.
+- assertNotVisible: { id: "tracking-allow" }
+# Vouchers live in memory: after the restart the deferred landing is gone, so the open below routes.
+- assertNotVisible: "Voucher ${E2E_VOUCHER} applied.*"
+- openLink: ${LINK_URL}
+- extendedWaitUntil: { visible: "Voucher ${E2E_VOUCHER} applied.*", timeout: 30000 }
+- assertVisible: { id: "product-name", text: "${E2E_PRODUCT_RE}" }

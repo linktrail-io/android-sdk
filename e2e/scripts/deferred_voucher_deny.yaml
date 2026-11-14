@@ -1,0 +1,13 @@
+# Deferred (simulated) · Product · Air Jordan 1 + voucher · consent deny
+appId: io.linktrail.demo.store
+---
+- launchApp: { clearState: true }
+- extendedWaitUntil: { visible: "Allow tracking?", timeout: 20000 }
+- tapOn: { id: "tracking-deny" }
+- tapOn: { id: "simulate-link" }
+- tapOn: { id: "scenario-voucher" }
+- assertVisible: { id: "product-name", text: "Air Jordan 1" }
+- assertVisible: "Voucher SUMMER25 applied · 25% off"
+# The price row can sit below the fold on a small CI screen.
+- scrollUntilVisible: { element: { id: "price" }, direction: DOWN }
+- assertVisible: { id: "price", text: "\\$135" }

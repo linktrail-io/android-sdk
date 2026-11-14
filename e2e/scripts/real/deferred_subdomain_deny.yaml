@@ -1,0 +1,14 @@
+# Deferred (REAL) · subdomain host · consent deny
+# Run by scripts/e2e-maestro.sh only when an SDK key is set. Before this flow the script makes a real
+# click on the subdomain link, stages its lt_click token through the debug fake Play referrer
+# (adb shell setprop debug.linktrail.referrer "lt_click=<token>") and installs the app fresh.
+# Afterwards it checks logcat for the matching install log line.
+appId: io.linktrail.demo.store
+---
+- launchApp
+- extendedWaitUntil: { visible: "Allow tracking?", timeout: 30000 }
+- tapOn: { id: "tracking-deny" }
+# Consent gates attribution, not navigation: both answers route to the linked product + voucher.
+# E2E_VOUCHER / E2E_PRODUCT_RE come from scripts/e2e-env.py (expect_voucher / expect_product).
+- extendedWaitUntil: { visible: "Voucher ${E2E_VOUCHER} applied.*", timeout: 30000 }
+- assertVisible: { id: "product-name", text: "${E2E_PRODUCT_RE}" }

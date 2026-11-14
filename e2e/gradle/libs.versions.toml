@@ -1,0 +1,19 @@
+# Versions for the e2e harness.
+#
+# linktrailSdk is the ONE place the tested SDK version lives: the published Maven Central artifact
+# io.linktrail:sdk that e2e/example depends on. Bump it after each release.
+[versions]
+linktrailSdk = "0.2.0"
+agp = "8.2.2"
+kotlin = "1.9.22"
+coreKtx = "1.12.0"
+coroutines = "1.7.3"
+
+[libraries]
+linktrail-sdk = { group = "io.linktrail", name = "sdk", version.ref = "linktrailSdk" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

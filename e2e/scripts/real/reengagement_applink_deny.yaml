@@ -1,0 +1,13 @@
+# Re-engagement (REAL) · https App Link on the subdomain host · consent deny
+# Run by scripts/e2e-maestro.sh only when an SDK key is set. The script passes LINK_URL
+# (the subdomain_link, scripts/e2e-env.json) and approves the host for the app beforehand
+# (pm set-app-links-user-selection), so the link opens the app instead of the browser.
+# deny: the SDK uses the non-recording GET /v1/links/resolve (route only).
+appId: io.linktrail.demo.store
+---
+- launchApp: { clearState: true }
+- extendedWaitUntil: { visible: "Allow tracking?", timeout: 30000 }
+- tapOn: { id: "tracking-deny" }
+- openLink: ${LINK_URL}
+- extendedWaitUntil: { visible: "Voucher ${E2E_VOUCHER} applied.*", timeout: 30000 }
+- assertVisible: { id: "product-name", text: "${E2E_PRODUCT_RE}" }

@@ -1,0 +1,259 @@
+name: E2E
+
+# Maestro E2E against the PUBLISHED SDK: e2e/example depends on io.linktrail:sdk from Maven Central
+# (version: linktrailSdk in e2e/gradle/libs.versions.toml, the one place to bump it). Runs on
+# GitHub-hosted ubuntu-latest only, with KVM and an API 35 x86_64 emulator.
+#   - 12 simulated flows (e2e/scripts/*.yaml): the in-app Deep Link Simulator and kickflip:// links.
+#     No backend, no key: they always run, forks included.
+#   - 16 real flows (e2e/scripts/real/*.yaml) plus the link-type matrix: real clicks on the custom-domain
+#     and subdomain links, probabilistic installs, App Link re-engagement, per_install rewards on the
+#     rewarded link types and the rev_share reward link. They need LINKTRAIL_KEY; without it (fork PRs)
+#     they are recorded as skipped and the job still passes on the simulated flows.
+#
+# Hosts, slugs and the backend live ONLY in e2e/scripts/e2e-env.json. A link (link type, reward link)
+# with no entry for the environment is skipped with a notice.
+#
+# Secrets (optional; a missing one skips what needs it, never fails the run):
+#   LINKTRAIL_KEY  SDK key of the prod e2e workspace (enables the real flows)
+#   E2E_TOKEN      X-E2E-Token for the backend checks GET /v1/e2e/clicks/<token> (install, reward,
+#                  earning, opens). Without it a real row whose point is that check ends skipped.
+
+on:
+  pull_request:
+    paths:
+      - 'e2e/**'
+      - '.github/workflows/e2e.yml'
+  schedule:
+    - cron: '0 3 * * *'   # nightly: catches a backend or link change against the released SDK
+  workflow_dispatch:
+    inputs:
+      custom_link:
+        description: 'custom_link: https://<custom host>/<slug> or a slug (empty = default)'
+        type: string
+        default: ''
+      subdomain_link:
+        description: 'subdomain_link: https://<subdomain host>/<slug> or a slug (empty = default)'
+        type: string
+        default: ''
+      custom_problistic_link:
+        description: 'custom_problistic_link: full URL or slug (empty = default)'
+        type: string
+        default: ''
+      subdomain_problistic_link:
+        description: 'subdomain_problistic_link: full URL or slug (empty = default)'
+        type: string
+        default: ''
+      link_types:
+        description: 'Link-type matrix: all, none, or a comma list (general,campaign,influencer,partner)'
+        type: string
+        default: all
+      expect_product:
+        description: 'Product name the click-token flows must show (empty = any product)'
+        type: string
+        default: ''
+      expect_voucher:
+        description: 'Voucher code they must show (empty = the default in e2e/scripts/e2e-env.json)'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('e2e-pr-{0}', github.event.pull_request.number) || format('e2e-run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    # pull-requests: write for the sticky e2e report comment (same-repo PRs only).
+    permissions:
+      contents: read
+      pull-requests: write
+    defaults:
+      run:
+        working-directory: e2e
+    env:
+      API_LEVEL: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Fails fast on a link whose host isn't the environment's. The resolved values (BACKEND_URL,
+      # E2E_<SLOT> as full URLs, …) go to $GITHUB_ENV for the steps below.
+      - name: Resolve environment and links
+        env:
+          E2E_CUSTOM_LINK: ${{ inputs.custom_link || '' }}
+          E2E_SUBDOMAIN_LINK: ${{ inputs.subdomain_link || '' }}
+          E2E_CUSTOM_PROBLISTIC_LINK: ${{ inputs.custom_problistic_link || '' }}
+          E2E_SUBDOMAIN_PROBLISTIC_LINK: ${{ inputs.subdomain_problistic_link || '' }}
+          E2E_LINK_TYPES: ${{ inputs.link_types || '' }}
+          E2E_EXPECT_PRODUCT: ${{ inputs.expect_product || '' }}
+          E2E_EXPECT_VOUCHER: ${{ inputs.expect_voucher || '' }}
+        run: |
+          set -euo pipefail
+          python3 -I scripts/e2e-env.py resolve --format env >> "$GITHUB_ENV"
+          version="$(sed -nE 's/^linktrailSdk[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' gradle/libs.versions.toml)"
+          [ -n "$version" ] || { echo "::error::linktrailSdk not found in e2e/gradle/libs.versions.toml"; exit 1; }
+          echo "SDK_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Testing io.linktrail:sdk:$version from Maven Central."
+
+      - name: Check secrets
+        env:
+          HAS_KEY: ${{ secrets.LINKTRAIL_KEY != '' }}
+          HAS_TOKEN: ${{ secrets.E2E_TOKEN != '' }}
+        run: |
+          if [ "$HAS_KEY" != "true" ]; then
+            echo "::notice title=e2e::LINKTRAIL_KEY is not set (e.g. a fork PR): only the simulated flows run; the real flows are recorded as skipped."
+          fi
+          if [ "$HAS_TOKEN" != "true" ]; then
+            echo "::notice title=e2e::E2E_TOKEN is not set: backend checks are skipped, so real rows that exist for them end skipped."
+          fi
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # ubuntu-latest leaves ~7 GB free; the API 35 AVD needs ~7.4 GB for its userdata partition.
+      # Drop toolchains this job never uses.
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk /opt/ghc /usr/local/.ghcup \
+            /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/local/share/powershell \
+            /usr/share/swift /usr/local/julia* /opt/az /usr/local/share/chromium
+          sudo docker image prune --all --force >/dev/null 2>&1 || true
+          df -h /
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm
+
+      - name: Install Maestro
+        run: |
+          curl -Ls https://get.maestro.mobile.dev | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      # Warm the Gradle build (and resolve the SDK from Maven Central) outside the emulator step.
+      - name: Build example app against the published SDK
+        run: |
+          ./gradlew :example:assembleDebug -q
+          ./gradlew :example:dependencyInsight --configuration debugRuntimeClasspath --dependency io.linktrail:sdk -q
+
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ env.API_LEVEL }}-google_apis-x86_64-v1 # bump to drop a stale cached image
+
+      - name: Create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.API_LEVEL }}
+          target: google_apis
+          arch: x86_64
+          cores: 4
+          ram-size: 4096M
+          disk-size: 6000M
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          emulator-boot-timeout: 900
+          working-directory: e2e
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: E2E — Maestro (12 simulated + 16 real flows + link-type matrix)
+        timeout-minutes: 70
+        env:
+          LINKTRAIL_KEY: ${{ secrets.LINKTRAIL_KEY }}
+          E2E_TOKEN: ${{ secrets.E2E_TOKEN }}
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.API_LEVEL }}
+          target: google_apis
+          arch: x86_64
+          cores: 4
+          ram-size: 4096M
+          disk-size: 6000M
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot-save -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          emulator-boot-timeout: 900
+          working-directory: e2e
+          # Let System UI settle after boot before the first flow (boot-time ANR dialogs otherwise
+          # cover the app on a cold emulator).
+          script: |
+            sleep 45
+            bash scripts/e2e-maestro.sh
+
+      # On failure: logcat dumps, Maestro console and debug output per failed attempt (written by
+      # scripts/e2e-maestro.sh to build/e2e-logs), plus Maestro's ~/.maestro/tests folder.
+      - name: Collect Maestro debug output
+        if: failure()
+        run: |
+          mkdir -p build/e2e-logs
+          if [ -d ~/.maestro/tests ]; then cp -R ~/.maestro/tests build/e2e-logs/maestro-tests || true; fi
+
+      - name: Upload Maestro debug output and logcat
+        id: debug-artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-debug
+          path: e2e/build/e2e-logs/
+          retention-days: 7
+          if-no-files-found: ignore
+          include-hidden-files: true
+
+      # The e2e report: step summary always (pass or fail), report.json/html as an artifact, and one
+      # sticky PR comment. Secrets are redacted from everything it renders.
+      - name: E2E report
+        if: ${{ !cancelled() }}
+        env:
+          COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ARTIFACT_URL: ${{ steps.debug-artifact.outputs.artifact-url }}
+          LINKTRAIL_KEY: ${{ secrets.LINKTRAIL_KEY }}
+          E2E_TOKEN: ${{ secrets.E2E_TOKEN }}
+        run: |
+          echo "Tested SDK: \`io.linktrail:sdk:${SDK_VERSION:-unknown}\` (Maven Central)" >> "$GITHUB_STEP_SUMMARY"
+          python3 -I scripts/e2e-report.py render \
+            --results build/e2e-logs/results.jsonl --out-dir build/e2e-report \
+            --summary "$GITHUB_STEP_SUMMARY" --suites simulated,real --link-types "${E2E_LINK_TYPES_RUN:-}" \
+            --environment "${LINKTRAIL_ENV:-unresolved}" --backend-url "${BACKEND_URL:-}" \
+            --expect-product "${E2E_EXPECT_PRODUCT:-}" --expect-voucher "${E2E_EXPECT_VOUCHER:-}" \
+            --commit "$COMMIT" --runner "$RUNNER_NAME ($RUNNER_OS)" \
+            --run-url "$RUN_URL" --artifact-url "$ARTIFACT_URL"
+
+      - name: Upload e2e report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: |
+            e2e/build/e2e-report/report.json
+            e2e/build/e2e-report/report.html
+          retention-days: 30
+          if-no-files-found: warn
+
+      # Fork PRs get a read-only token, so they keep the step summary and artifact only.
+      - name: Sticky PR comment
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: bash scripts/e2e-report-comment.sh "$REPO" "$PR" build/e2e-report/report.md

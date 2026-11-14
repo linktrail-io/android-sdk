@@ -1,0 +1,35 @@
+{
+  "_comment": "The ONE place for e2e hosts, slugs and backend URLs. scripts/e2e-env.py resolves it with the run's choices (E2E_<SLOT>, E2E_LINK_TYPES, E2E_EXPECT_*) for scripts/e2e-maestro.sh and .github/workflows/e2e.yml. Nothing else may hardcode a host, slug or backend URL. 'host' in links names the environment field the slug is served on. 'link_types': one dedicated link per link type and environment (type -> environment -> {host, slug}; deep link /products/aj1, customData voucher/discountPercent/linkType/source); a type with no entry for the run's environment is skipped with a notice. E2E_LINK_TYPES picks them (all, none, or a comma list). 'link_type_expect': what the link-type allow runs must show. 'rewarded_link_types': the link types whose links carry a per_install reward: an allow install must earn it and a deny install must earn nothing; the other types must have no reward. 'reward_links': the event-reward links (reward model -> environment -> {host, slug, link_type}), run by the deferred_event_* / deferred_revshare_* flows; an environment without one skips those rows with a notice. 'reward_events': what those flows send after the counted install. 'backend_checks': which optional backend checks the environment supports; a false check is recorded as skipped, never pass or fail.",
+  "default_environment": "prod",
+  "aliases": {},
+  "environments": {
+    "prod": {
+      "backend_url": "https://backend.linktrail.io",
+      "key_secret": "LINKTRAIL_KEY",
+      "subdomain_host": "kick.linktrail.io",
+      "custom_host": "link.kynxlabs.com",
+      "override_backend": false,
+      "backend_checks": { "events": false, "device_lookup": false }
+    }
+  },
+  "links": {
+    "custom_link":               { "host": "custom_host",    "slug": "summer-sale" },
+    "subdomain_link":            { "host": "subdomain_host", "slug": "discounted-product" },
+    "custom_problistic_link":    { "host": "custom_host",    "slug": "custom-problistic" },
+    "subdomain_problistic_link": { "host": "subdomain_host", "slug": "ios-problistic" }
+  },
+  "expect": { "product": "", "voucher": "SUMMER25" },
+  "link_types": {
+    "general":    { "prod": { "host": "custom_host", "slug": "e2e-general" } },
+    "campaign":   { "prod": { "host": "custom_host", "slug": "e2e-campaign" } },
+    "influencer": { "prod": { "host": "custom_host", "slug": "e2e-influencer" } },
+    "partner":    { "prod": { "host": "custom_host", "slug": "e2e-partner" } }
+  },
+  "link_type_expect": { "product": "Air Jordan 1", "voucher": "SUMMER25", "source": "e2e" },
+  "rewarded_link_types": ["influencer", "partner"],
+  "reward_links": {
+    "per_event": {},
+    "rev_share": { "prod": { "host": "custom_host", "slug": "e2e-revshare", "link_type": "partner" } }
+  },
+  "reward_events": { "revenue_minor": 1999, "other_event": "e2e_other" }
+}
